@@ -5,31 +5,33 @@ np.random.seed(42)
 
 n = 256
 values = np.random.random_sample((n,n))
-
-state = 0
+current_values = values
 
 def average(x, y):
     return (x+y)/2
 
-def avg_cols(values, transpose = False):
+def avg_cols():
     """Returns array with averaged columns."""
+    global current_values
     new_values = []
 
-    for row in values:
+    for row in current_values:
         new_row = []
         for i in range(0, len(row), 2):
             new_row.append(average(row[i],row[i+1]))
         new_values.append(new_row)
+    current_values = new_values
 
-    return np.array(new_values)
-
-def avg_rows(values):
+def avg_rows():
     """Returns array with averaged rows."""
-    return np.transpose(avg_cols(np.transpose(values)))
+    global current_values
+    current_values = np.transpose(current_values)
+    avg_cols()
+    current_values = np.transpose(current_values)
 
-def replot(values):
+def replot(val):
     """Re-plots and updates the current canvas with the new values."""
-    plt.imshow(values, origin='lower', aspect='auto')
+    plt.imshow(val, origin='lower', aspect='auto')
     fig.canvas.draw()
 
 def on_key(event):
@@ -63,18 +65,25 @@ def on_key(event):
 def check_state(state):
     """Checks the current state and updates the graph accordingly."""
 
+    global current_values
+
     if state == 0:
         print('Returning to original plot')
+        current_values = values
         replot(values)
     elif state == 1:
         print('Reducing resolution to 128x128')
-        replot(avg_rows(avg_cols(values)))
+        avg_rows()
+        avg_cols()
+        replot(current_values)
     elif state == 2:
         print('Reducing resolution to 128x256')
-        replot(avg_rows(values))
+        avg_rows()
+        replot(current_values)
     elif state == 3:
         print('Reducing resolution to 256x128')
-        replot(avg_cols(values))
+        avg_cols()
+        replot(current_values)
 
 
 fig = plt.figure()
