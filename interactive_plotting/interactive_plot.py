@@ -1,27 +1,35 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy import ndimage, interpolate
 
 np.random.seed(42)
 
 n = 256
-p = 0.5 #order of scipy.ndimage spline zoom
 values = np.random.random_sample((n,n))
-
 
 state = 0
 
-def interp(n, values):
-    """Returns interpolation function used for reducing either the rows or columns of matrix. """
-    return interpolate.RectBivariateSpline(np.linspace(0,1,n), np.linspace(0,1,n), values)
+def average(x, y):
+    return (x+y)/2
 
-def zoom(values, p):
-    """Returns new array that has been interpolated by order of p."""
-    return ndimage.zoom(values, p)
+def avg_cols(values, transpose = False):
+    """Returns array with averaged columns."""
+    new_values = []
+
+    for row in values:
+        new_row = []
+        for i in range(0, len(row), 2):
+            new_row.append(average(row[i],row[i+1]))
+        new_values.append(new_row)
+
+    return np.array(new_values)
+
+def avg_rows(values):
+    """Returns array with averaged rows."""
+    return np.transpose(avg_cols(np.transpose(values)))
 
 def replot(values):
     """Re-plots and updates the current canvas with the new values."""
-    plt.imshow(values, origin='lower')
+    plt.imshow(values, origin='lower', aspect='auto')
     fig.canvas.draw()
 
 def on_key(event):
@@ -54,24 +62,23 @@ def on_key(event):
 
 def check_state(state):
     """Checks the current state and updates the graph accordingly."""
-    f = interp(n, values)
 
     if state == 0:
         print('Returning to original plot')
         replot(values)
     elif state == 1:
         print('Reducing resolution to 128x128')
-        replot(zoom(values, p))
+        replot(avg_rows(avg_cols(values)))
     elif state == 2:
         print('Reducing resolution to 128x256')
-        replot(f(np.linspace(0,1,int(n/2)),np.linspace(0,1,n)))
+        replot(avg_rows(values))
     elif state == 3:
         print('Reducing resolution to 256x128')
-        replot(f(np.linspace(0,1,n),np.linspace(0,1,int(n/2))))
+        replot(avg_cols(values))
 
 
 fig = plt.figure()
-plt.imshow(values, origin='lower')
+plt.imshow(values, origin='lower', aspect='auto')
 cid = fig.canvas.mpl_connect('key_press_event', on_key)
 
 plt.show()
