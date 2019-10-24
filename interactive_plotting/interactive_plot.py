@@ -1,12 +1,15 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.colors import ListedColormap
+import seaborn as sns
+
+palette = ListedColormap(sns.diverging_palette(220, 20, n=7).as_hex())
 
 np.random.seed(42)
 
 n = 256
 values = np.random.random_sample((n,n))
 current_values = values
-
 vmin = np.mean(values)
 inc = np.std(values)/10
 
@@ -34,7 +37,7 @@ def avg_rows():
 
 def replot(val):
     """Re-plots and updates the current canvas with the new values."""
-    plt.imshow(val, vmin=vmin, origin='lower', aspect='auto')
+    plt.imshow(val, vmin=vmin, origin='lower', aspect='auto', cmap=palette)
     fig.canvas.draw()
 
 def on_key(event):
@@ -49,6 +52,8 @@ def on_key(event):
     
     """
     print('you pressed', event.key)
+
+    state = -1
 
     if event.key == 'o':
         state = 0
@@ -108,7 +113,7 @@ def check_state(state):
 
 
 fig = plt.figure()
-plt.imshow(values, vmin=vmin, origin='lower', aspect='auto')
+plt.imshow(values, vmin=vmin, origin='lower', aspect='auto', cmap=palette)
 cid = fig.canvas.mpl_connect('key_press_event', on_key)
 
 plt.show()
