@@ -1,18 +1,19 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
-import seaborn as sns
+#import seaborn as sns
 
-palette = ListedColormap(sns.diverging_palette(220, 20, n=7).as_hex())
+#palette = ListedColormap(sns.diverging_palette(220, 20, n=7).as_hex())
 
 filename = '/home/dleduc/hey-aliens/simulateFRBclassification/jiani_FRBs.npy'
 frb = np.load(filename)
 
 print(frb.shape)
 
-values = frb[0]
+values = frb[2]
 current_values = values
-vmin = np.mean(values)
+
+vmin = np.min(values)
 inc = np.std(values)/10
 
 
@@ -40,7 +41,7 @@ def avg_rows():
 
 def replot(val):
     """Re-plots and updates the current canvas with the new values."""
-    plt.imshow(val, vmin=vmin, origin='lower', aspect='auto', cmap=palette)
+    plt.imshow(val, vmin=vmin, origin='lower', aspect='auto')
     fig.canvas.draw()
 
 def on_key(event):
@@ -116,7 +117,7 @@ def check_state(state):
 
 
 fig = plt.figure()
-plt.imshow(values, vmin=vmin, origin='lower', aspect='auto', cmap=palette)
+plt.imshow(values, vmin=vmin, origin='lower', aspect='auto')
 cid = fig.canvas.mpl_connect('key_press_event', on_key)
 
 plt.show()
