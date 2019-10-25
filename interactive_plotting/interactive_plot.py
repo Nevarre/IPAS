@@ -1,11 +1,14 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-np.random.seed(42)
+filename = '/home/dleduc/hey-aliens/simulateFRBclassification/jiani_FRBs.npy'
+frb = np.load(filename)
 
-n = 256
-values = np.random.random_sample((n,n))
+print(frb.shape)
+
+values = frb[0]
 current_values = values
+
 
 def average(x, y):
     return (x+y)/2
@@ -72,16 +75,16 @@ def check_state(state):
         current_values = values
         replot(values)
     elif state == 1:
-        print('Reducing resolution to 128x128')
+        print('Reducing resolution')
         avg_rows()
         avg_cols()
         replot(current_values)
     elif state == 2:
-        print('Reducing resolution to 128x256')
+        print('Reducing rows')
         avg_rows()
         replot(current_values)
     elif state == 3:
-        print('Reducing resolution to 256x128')
+        print('Reducing columns')
         avg_cols()
         replot(current_values)
 
