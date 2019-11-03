@@ -1,21 +1,34 @@
+import sys
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 #import seaborn as sns
 
+import filterbank
+import spectra
+import waterfaller_interact as wt
+
 #palette = ListedColormap(sns.diverging_palette(220, 20, n=7).as_hex())
 
+
+# real FRB from Dominic
 filename = '/home/dleduc/hey-aliens/simulateFRBclassification/jiani_FRBs.npy'
 frb = np.load(filename)
 
-print(frb.shape)
+# datafile from waterfaller
+rawdatafile = filterbank.FilterbankFile("/mnt_blpd9/datax/incoming/spliced_guppi_57991_49905_DIAG_FRB121102_0011.gpuspec.0001.8.4chan.fil")
+data, bins, nbins, start_time = wt.waterfall(rawdatafile, 16.22, 0.012, dm=600, nsub=64,  width_bins=1)
 
-values = frb[2]
+
+# data points for plotting
+values = data.data
 current_values = values
 
-vmin = np.min(values)
-inc = np.std(values)/10
+time_signal = np.sum(values, axis=0)
+current_time_signal = np.sum(current_values, axis=0)
 
+vmin = np.mean(values)
+inc = np.std(values)/10
 
 def average(x, y):
     return (x+y)/2
@@ -41,7 +54,7 @@ def avg_rows():
 
 def replot(val):
     """Re-plots and updates the current canvas with the new values."""
-    plt.imshow(val, vmin=vmin, origin='lower', aspect='auto')
+    ax[1].imshow(val, vmin=vmin, origin='upper', aspect='auto', cmap='seismic')
     fig.canvas.draw()
 
 def on_key(event):
@@ -116,8 +129,20 @@ def check_state(state):
         replot(current_values)
 
 
-fig = plt.figure()
-plt.imshow(values, vmin=vmin, origin='lower', aspect='auto')
-cid = fig.canvas.mpl_connect('key_press_event', on_key)
+def main():
+    global fig, ax
 
-plt.show()
+    fig, ax  = plt.subplots(2, sharex=True, gridspec_kw={'height_ratios':[1,3]})
+
+    ax[0].plot(time_signal, color='k')
+    ax[0].axes.get_yaxis().set_ticks([])
+    ax[0].axes.get_xaxis().set_ticks([])
+
+    ax[1].imshow(values, vmin=vmin, origin='upper', aspect='auto', cmap='seismic')
+    ax[1].set(ylabel = 'Frequency', xlabel='Time')
+
+    cid = fig.canvas.mpl_connect('key_press_event', on_key)
+
+    plt.show()
+
+main()
