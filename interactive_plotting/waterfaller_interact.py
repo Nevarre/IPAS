@@ -16,7 +16,7 @@ import sys
 import optparse
 import copy
 import matplotlib
-matplotlib.use('pdf')
+#matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 import matplotlib.cm
 import numpy as np
@@ -190,7 +190,7 @@ def waterfall(rawdatafile, start, duration, dm=None, nbins=None, nsub=None,\
     return data, nbinsextra, nbins, start
 
 def plot_waterfall(data, start, duration, dm,ofile,  
-                   integrate_ts=False, integrate_spec=False, show_cb=False, 
+                   integrate_ts=True, integrate_spec=False, show_cb=False, 
                    cmap_str="gist_yarg", sweep_dms=[], sweep_posns=[], 
                    ax_im=None, ax_ts=None, ax_spec=None, interactive=True):
     """ I want a docstring too!
