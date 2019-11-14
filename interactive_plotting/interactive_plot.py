@@ -34,14 +34,28 @@ data, bins, nbins, start_time = wt.waterfall(rawdatafile, start, duration, dm=dm
 values = data.data
 current_values = values
 
-time_signal = np.sum(values, axis=0)
-#current_time_signal = np.sum(current_values, axis=0)
+time_signal = np.sum(values, axis=0).flatten()
+current_time_signal = time_signal
 
 vmin = np.mean(values)
 inc = np.std(values)/10
 
 def average(x, y):
     return (x+y)/2
+
+def avg_timesignal():
+    """Reduces bins in time series array"""
+    global current_time_signal
+    new_row = []
+
+    if (len(current_time_signal) % 2 != 0):
+        for i in range(0, len(current_time_signal)-1, 2):
+            new_row.append(average(current_time_signal[i], current_time_signal[i+1]))
+    else:
+        for i in range(0, len(row), 2):
+            new_row.append(average(current_time_signal[i], current_time_signal[i+1]))
+    
+    current_time_signal = np.array(new_row)
 
 def avg_cols():
     """Returns array with averaged columns."""
@@ -50,9 +64,15 @@ def avg_cols():
 
     for row in current_values:
         new_row = []
-        for i in range(0, len(row), 2):
-            new_row.append(average(row[i],row[i+1]))
-        new_values.append(new_row)
+
+        if (len(row) % 2 != 0):
+            for i in range(0, len(row)-1, 2):
+                new_row.append(average(row[i],row[i+1]))
+            new_values.append(new_row)
+        else:
+            for i in range(0, len(row), 2):
+                new_row.append(average(row[i],row[i+1]))
+            new_values.append(new_row)
     current_values = new_values
 
 def avg_rows():
@@ -62,9 +82,12 @@ def avg_rows():
     avg_cols()
     current_values = np.transpose(current_values)
 
-def replot(val):
+def replot():
     """Re-plots and updates the current canvas with the new values."""
-    ax[1].imshow(val, vmin=vmin, origin='lower', aspect='auto', cmap=cmap)
+    global fig, ax, current_values, current_time_signal
+
+    ax[0].plot(current_time_signal, color='k')
+    ax[1].imshow(current_values, vmin=vmin, origin='lower', aspect='auto', cmap=cmap)
     fig.canvas.draw()
 
 def on_key(event):
@@ -104,39 +127,42 @@ def on_key(event):
 def check_state(state):
     """Checks the current state and updates the graph accordingly."""
 
-    global current_values, vmin
+    global values, current_values, time_signal, current_time_signal, vmin
 
     if state == 0:
         print('Returning to original plot')
         current_values = values
-        replot(values)
+        current_time_signal = time_signal
+        replot()
     elif state == 1:
         print('Reducing resolution')
         avg_rows()
         avg_cols()
-        replot(current_values)
+        avg_timesignal()
+        replot()
     elif state == 2:
         print('Reducing rows')
         avg_rows()
-        replot(current_values)
+        avg_timesignal()
+        replot()
     elif state == 3:
         print('Reducing columns')
         avg_cols()
-        replot(current_values)
+        replot()
     elif state == 4:
         print('Reducing vmin')
         if vmin - inc < np.min(current_values):
             print('error')
             return
         vmin = vmin - inc
-        replot(current_values)
+        replot()
     elif state == 5:
         print('Increasing vmin')
         if vmin + inc > np.max(current_values):
             print('error')
             return
         vmin = vmin + inc
-        replot(current_values)
+        replot()
 
 
 def main():
@@ -147,8 +173,8 @@ def main():
     fig, ax  = plt.subplots(2, sharex=True, gridspec_kw={'height_ratios':[1,3]})
 
     ax[0].plot(time_signal, color='k')
-    ax[0].axes.get_yaxis().set_ticks([])
-    ax[0].axes.get_xaxis().set_ticks([])
+    #ax[0].axes.get_yaxis().set_ticks([])
+    #ax[0].axes.get_xaxis().set_ticks([])
 
     ax[1].imshow(values, vmin=vmin, origin='lower', aspect='auto', cmap=cmap)
     ax[1].set(ylabel = 'Frequency', xlabel='Time')
