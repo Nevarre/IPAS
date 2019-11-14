@@ -37,7 +37,8 @@ current_values = values
 time_signal = np.sum(values, axis=0).flatten()
 current_time_signal = time_signal
 
-vmin = np.mean(values)
+vmin = 0
+#vmin = np.mean(values)
 inc = np.std(values)/10
 
 def average(x, y):
@@ -101,9 +102,9 @@ def on_key(event):
         "q" - Quit and exit plotting tool.
     
     """
-    print('you pressed', event.key)
-
+    
     state = -1
+    print('you pressed', event.key)
 
     if event.key == 'o':
         state = 0
@@ -119,7 +120,7 @@ def on_key(event):
         state = 5
     elif event.key == 'q':
         state = -1
-        fig.canvas.mpl_disconnect(cid)
+        #fig.canvas.mpl_disconnect(cid)
 
     if state != -1:
         check_state(state) 
@@ -164,6 +165,14 @@ def check_state(state):
         vmin = vmin + inc
         replot()
 
+def onclick(event):
+    global current_values
+
+    if event.dblclick:
+        print(event.y, event.ydata)
+        #current_values[int(event.y)] = np.zeros(current_values[int(event.y)])
+        #replot()
+
 
 def main():
     global fig, ax
@@ -179,7 +188,8 @@ def main():
     ax[1].imshow(values, vmin=vmin, origin='lower', aspect='auto', cmap=cmap)
     ax[1].set(ylabel = 'Frequency', xlabel='Time')
 
-    cid = fig.canvas.mpl_connect('key_press_event', on_key)
+    fig.canvas.mpl_connect('key_press_event', on_key)
+    fig.canvas.mpl_connect('button_press_event', onclick)
 
     plt.show()
 
