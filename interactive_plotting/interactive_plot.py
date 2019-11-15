@@ -121,8 +121,9 @@ def on_key(event):
         state = 5
     elif event.key == 'q':
         state = -1
-        #fig.canvas.mpl_disconnect(cid)
-
+        #fig.canvas.mpl_disconnect(fig.canvas.mpl_connect('key_press_event', on_key))
+        #fig.canvas.mpl_disconnect(fig.canvas.mpl_connect('button_press_event', onclick))
+        sys.exit()
     if state != -1:
         check_state(state) 
 
