@@ -4,6 +4,8 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 #import seaborn as sns
 
+plt.rcParams['keymap.zoom'] = '' #disable default zoom key "o"
+
 from optparse import OptionParser
 import filterbank
 import spectra
@@ -37,8 +39,7 @@ current_values = values
 time_signal = np.sum(values, axis=0).flatten()
 current_time_signal = time_signal
 
-vmin = 0
-#vmin = np.mean(values)
+vmin = np.mean(values)
 inc = np.std(values)/10
 
 def average(x, y):
@@ -53,7 +54,7 @@ def avg_timesignal():
         for i in range(0, len(current_time_signal)-1, 2):
             new_row.append(average(current_time_signal[i], current_time_signal[i+1]))
     else:
-        for i in range(0, len(row), 2):
+        for i in range(0, len(current_time_signal), 2):
             new_row.append(average(current_time_signal[i], current_time_signal[i+1]))
     
     current_time_signal = np.array(new_row)
@@ -169,10 +170,9 @@ def onclick(event):
     global current_values
 
     if event.dblclick:
-        print(event.y, event.ydata)
-        #current_values[int(event.y)] = np.zeros(current_values[int(event.y)])
-        #replot()
-
+        print("y-bin is ", event.ydata)
+        current_values[int(round(event.ydata))] = np.zeros(np.shape(current_values)[1])
+        replot()
 
 def main():
     global fig, ax
