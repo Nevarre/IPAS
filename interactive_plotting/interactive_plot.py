@@ -32,8 +32,8 @@ rawdatafile = filterbank.FilterbankFile("/mnt_blpd9/datax/incoming/spliced_guppi
 data, bins, nbins, start_time = wt.waterfall(rawdatafile, start, duration, dm=dm, nsub=nsub,  width_bins=width)
 
 # data points for plotting
-values = data.data
-current_values = np.copy(values)
+values = np.copy(data.data)
+current_values = np.copy(data.data)
 
 time_signal = np.sum(values, axis=0).flatten()
 current_time_signal = time_signal
@@ -184,7 +184,7 @@ def main():
 
     wt.plot_waterfall(data, start, duration, dm, "unknown_cand", cmap_str=cmap, sweep_posns=sweep_posn)
 
-    fig, ax  = plt.subplots(2, gridspec_kw={'height_ratios':[1,3]})
+    fig, ax  = plt.subplots(2, figsize=(8,6), gridspec_kw={'height_ratios':[1,3]})
 
     ax[0].plot(time_signal, color='k', scalex=True)
     ax[0].set_xlim(0, len(current_time_signal))
