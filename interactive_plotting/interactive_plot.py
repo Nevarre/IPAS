@@ -35,29 +35,14 @@ data, bins, nbins, start_time = wt.waterfall(rawdatafile, start, duration, dm=dm
 values = np.copy(data.data)
 current_values = np.copy(data.data)
 
-time_signal = np.sum(values, axis=0).flatten()
-current_time_signal = time_signal
-
 vmin = np.mean(values)
 inc = np.std(values)/10
 
+def get_time_signal(array):
+    return np.sum(array, axis=0).flatten()
 
 def average(x, y):
     return (x+y)/2
-
-def avg_timesignal():
-    """Reduces bins in time series array"""
-    global current_time_signal
-    new_row = []
-
-    if (len(current_time_signal) % 2 != 0):
-        for i in range(0, len(current_time_signal)-1, 2):
-            new_row.append(average(current_time_signal[i], current_time_signal[i+1]))
-    else:
-        for i in range(0, len(current_time_signal), 2):
-            new_row.append(average(current_time_signal[i], current_time_signal[i+1]))
-    
-    current_time_signal = np.array(new_row)
 
 def avg_cols():
     """Returns array with averaged columns."""
@@ -88,9 +73,12 @@ def replot():
     """Re-plots and updates the current canvas with the new values."""
     global fig, ax, current_values, current_time_signal
 
+    
+    time_signal = get_time_signal(current_values)
+
     ax[0].cla()
-    ax[0].plot(current_time_signal, color='k', scalex=True)
-    ax[0].set_xlim(0, len(current_time_signal))
+    ax[0].plot(time_signal, color='k', scalex=True)
+    ax[0].set_xlim(0, len(time_signal))
 
     ax[1].imshow(current_values, vmin=vmin, origin='lower', aspect='auto', cmap=cmap)
     ax[1].set(ylabel = 'Frequency', xlabel='Time')
@@ -134,23 +122,20 @@ def on_key(event):
 def check_state(state):
     """Checks the current state and updates the graph accordingly."""
 
-    global values, current_values, time_signal, current_time_signal, vmin
+    global values, current_values, vmin
 
     if state == 0:
         print('Returning to original plot')
         current_values = np.copy(values)
-        current_time_signal = time_signal
         replot()
     elif state == 1:
         print('Reducing resolution')
         avg_rows()
         avg_cols()
-        avg_timesignal()
         replot()
     elif state == 2:
         print('Reducing rows')
         avg_rows()
-        avg_timesignal()
         replot()
     elif state == 3:
         print('Reducing columns')
@@ -186,8 +171,9 @@ def main():
 
     fig, ax  = plt.subplots(2, figsize=(8,6), gridspec_kw={'height_ratios':[1,3]})
 
+    time_signal = get_time_signal(current_values)
     ax[0].plot(time_signal, color='k', scalex=True)
-    ax[0].set_xlim(0, len(current_time_signal))
+    ax[0].set_xlim(0, len(time_signal))
     #ax[0].axes.get_yaxis().set_ticks([])
     #ax[0].axes.get_xaxis().set_ticks([])
 
