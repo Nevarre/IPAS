@@ -1,8 +1,9 @@
 import sys
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.colors import ListedColormap
+#from matplotlib.colors import ListedColormap
 #import seaborn as sns
+#palette = ListedColormap(sns.diverging_palette(220, 20, n=7).as_hex())
 
 plt.rcParams['keymap.zoom'] = '' #disable default zoom key "o"
 
@@ -10,8 +11,8 @@ from optparse import OptionParser
 import filterbank
 import spectra
 import waterfaller_interact as wt
+import copy
 
-#palette = ListedColormap(sns.diverging_palette(220, 20, n=7).as_hex())
 
 
 # real FRB from Dominic
@@ -31,11 +32,16 @@ cmap = "hot"
 rawdatafile = filterbank.FilterbankFile("/mnt_blpd9/datax/incoming/spliced_guppi_57991_49905_DIAG_FRB121102_0011.gpuspec.0001.8.4chan.fil")
 data, bins, nbins, start_time = wt.waterfall(rawdatafile, start, duration, dm=dm, nsub=nsub,  width_bins=width)
 
-# data points for plotting
+static_data = copy.deepcopy(data)
+current_data = copy.deepcopy(data)
+
 values = np.copy(data.data)
 current_values = np.copy(data.data)
 
-vmin = np.mean(values)
+downsamp = 0
+numchan = data.numchans
+vmin = 0
+#vmin = np.mean(values)
 inc = np.std(values)/10
 
 def get_time_signal(array):
@@ -45,10 +51,16 @@ def average(x, y):
     return (x+y)/2
 
 def avg_cols():
-    """Returns array with averaged columns."""
-    global current_values
-    new_values = []
+    """Returns array with averaged columns.
+    Take data and downsample by 2
+    """
+    global current_values, downsamp, current_data
 
+    downsamp += 2
+    current_data.downsample(downsamp)
+    current_values = np.copy(current_data.data)
+    
+"""
     for row in current_values:
         new_row = []
 
@@ -61,17 +73,25 @@ def avg_cols():
                 new_row.append(average(row[i],row[i+1]))
             new_values.append(new_row)
     current_values = new_values
+"""
 
 def avg_rows():
     """Returns array with averaged rows."""
-    global current_values
+    global current_values, current_data, numchan
+
+    numchan = numchan/2
+    current_data.subband(numchan) 
+    current_values = np.copy(current_data.data)
+
+"""
     current_values = np.transpose(current_values)
     avg_cols()
     current_values = np.transpose(current_values)
+"""
 
 def replot():
     """Re-plots and updates the current canvas with the new values."""
-    global fig, ax, current_values, current_time_signal
+    global fig, ax, current_values
 
     
     time_signal = get_time_signal(current_values)
@@ -80,7 +100,8 @@ def replot():
     ax[0].plot(time_signal, color='k', scalex=True)
     ax[0].set_xlim(0, len(time_signal))
 
-    ax[1].imshow(current_values, vmin=vmin, origin='lower', aspect='auto', cmap=cmap)
+    ax[1].cla()
+    ax[1].imshow(current_values, vmin=vmin, origin='lower', aspect='auto')
     ax[1].set(ylabel = 'Frequency', xlabel='Time')
     fig.canvas.draw()
 
@@ -122,11 +143,14 @@ def on_key(event):
 def check_state(state):
     """Checks the current state and updates the graph accordingly."""
 
-    global values, current_values, vmin
+    global current_values, static_data, current_data, vmin, downsamp, numchan
 
     if state == 0:
         print('Returning to original plot')
-        current_values = np.copy(values)
+        current_data = copy.deepcopy(static_data)
+        current_values = np.copy(current_data.data)
+        downsamp = 0
+        numchan = static_data.numchans
         replot()
     elif state == 1:
         print('Reducing resolution')
@@ -177,7 +201,7 @@ def main():
     #ax[0].axes.get_yaxis().set_ticks([])
     #ax[0].axes.get_xaxis().set_ticks([])
 
-    ax[1].imshow(current_values, vmin=vmin, origin='lower', aspect='auto', cmap=cmap)
+    ax[1].imshow(current_values, vmin=vmin, origin='lower', aspect='auto')
     ax[1].set(ylabel = 'Frequency', xlabel='Time')
 
     fig.canvas.mpl_connect('key_press_event', on_key)
