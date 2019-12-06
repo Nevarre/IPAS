@@ -1,4 +1,4 @@
-## Interactive Plotting
+## Interactive Plotting for Astronomical Signals (IPAS)
 Breakthrough Listen interactive plotter for astronomical radio sources.
 
 ### OVERVIEW
