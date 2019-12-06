@@ -8,24 +8,40 @@ The Breakthrough Listen initiative aims to search for extraterrestrial life by l
 
 ### BUILD REQUIREMENTS
 
-numpy
-matplotlib
-filterbank
-spectra
-scipy
-pdat pulsar data toolbox
+* [NumPy](https://numpy.org/)
+* [Matplotlib](https://matplotlib.org/3.1.1/users/installing.html)
+* [SciPy](https://www.scipy.org/install.html)
+* [Presto](https://github.com/scottransom/presto)
+* [pypulsar](https://github.com/plazar/pypulsar)
 
 ### USAGE
 
-Key shortcuts:
 
-o - reverts to original state
-i - reduces columns and rows together
-r - reduces rows (subbanning)
-c - reduces columns (downsampling)
-- - reduces contrast
-+ - increases contrast
-shift + D + _ - decreases dispersion
-shift + D + + - increases dispersion
-q - quits GUI
+| Key command    | Function     |
+| ------------- |:-------------:|
+| `o`    | reverts to original state |
+| `i`    | reduces columns and rows together |
+| `r`    | reduces rows (subbanning) |
+| `c`    |  reduces columns (downsampling) |
+| `-`    | reduces contrast |
+| `+`    | increases contrast |
+| `shift` + `D` + `_`   | decreases dispersion |
+| `shift` + `D` + `+`   | increases dispersion |
+| `q`    | quits GUI |
 
+### Example
+
+The figure below shows how a real FRB signal (figure 1) and altered signal (figure 2). The dispersion has been reduced by 20 and subbanded 3 times.
+
+![alt text][figure 1]
+![alt text][figure 2]
+
+[figure 1]: https://github.com/stevecroft/bl-interns/blob/master/jianic/example_signals/A_unknown_cand_16.220_600.png
+[figure 2]: https://github.com/stevecroft/bl-interns/blob/master/jianic/example_signals/unknown_cand_16.220_580.png
+
+
+#### Future Work
+
+* Flagging channels still has to be fixed to interact with waterfaller.py
+* Customizable colormaps or option to cycle through colormap
+* Option parser for quicker access to GUI
