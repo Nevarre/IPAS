@@ -3,6 +3,7 @@ interactive_plot.py
 
 Breakthrough Listen interactive plotter for astronomical radio sources.
 Supports filterbank (.fil) files from Breakthrough Listen Open Data Archive.
+This version is intended for Fast Radio Bursts candidates.
 
 @author  Jiani Chen
 @version 1.0.0

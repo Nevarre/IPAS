@@ -1,3 +1,13 @@
+"""
+interactive_plot_general.py
+
+General interactive plotter for astronomical radio signals.
+
+@author Jiani Chen
+
+"""
+
+
 import sys
 import numpy as np
 from matplotlib import pyplot as plt
@@ -51,16 +61,10 @@ def average(x, y):
     return (x+y)/2
 
 def avg_cols():
-    """Returns array with averaged columns.
-    Take data and downsample by 2
-    """
-    global current_values, downsamp, current_data
+    """Returns array with averaged columns."""
+    global current_values
 
-    downsamp += 2
-    current_data.downsample(downsamp)
-    current_values = np.copy(current_data.data)
-    
-"""
+    new_values = []
     for row in current_values:
         new_row = []
 
@@ -73,27 +77,19 @@ def avg_cols():
                 new_row.append(average(row[i],row[i+1]))
             new_values.append(new_row)
     current_values = new_values
-"""
 
 def avg_rows():
     """Returns array with averaged rows."""
-    global current_values, current_data, numchan
-
-    numchan = numchan/2
-    current_data.subband(numchan) 
-    current_values = np.copy(current_data.data)
-
-"""
+    global current_values
+    
     current_values = np.transpose(current_values)
     avg_cols()
     current_values = np.transpose(current_values)
-"""
 
 def replot():
     """Re-plots and updates the current canvas with the new values."""
-    global fig, ax, current_values
+    global fig, ax
 
-    
     time_signal = get_time_signal(current_values)
 
     ax[0].cla()
@@ -134,8 +130,6 @@ def on_key(event):
         state = 5
     elif event.key == 'q':
         state = -1
-        #fig.canvas.mpl_disconnect(fig.canvas.mpl_connect('key_press_event', on_key))
-        #fig.canvas.mpl_disconnect(fig.canvas.mpl_connect('button_press_event', onclick))
         sys.exit()
     if state != -1:
         check_state(state) 
@@ -143,14 +137,12 @@ def on_key(event):
 def check_state(state):
     """Checks the current state and updates the graph accordingly."""
 
-    global current_values, static_data, current_data, vmin, downsamp, numchan
+    global current_values, static_data, current_data, vmin
 
     if state == 0:
         print('Returning to original plot')
         current_data = copy.deepcopy(static_data)
         current_values = np.copy(current_data.data)
-        downsamp = 0
-        numchan = static_data.numchans
         replot()
     elif state == 1:
         print('Reducing resolution')
@@ -186,15 +178,12 @@ def onclick(event):
     if event.dblclick:
         print("y-bin is ", event.ydata, event.y)
         current_values[int(round(event.ydata))] = np.zeros(np.shape(current_values)[1])
-        ax[1].set_data(current_values)
-
-        fig.canvas.draw()
-        #replot()
+        replot()
 
 def main():
     global fig, ax
 
-    wt.plot_waterfall(data, start, duration, dm, "unknown_cand", cmap_str=cmap, sweep_posns=sweep_posn)
+    #wt.plot_waterfall(data, start, duration, dm, "unknown_cand", cmap_str=cmap, sweep_posns=sweep_posn)
 
     fig, ax  = plt.subplots(2, figsize=(8,6), gridspec_kw={'height_ratios':[1,3]})
 
