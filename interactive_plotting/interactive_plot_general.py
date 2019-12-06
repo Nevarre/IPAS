@@ -10,63 +10,99 @@ plt.rcParams['keymap.zoom'] = '' #disable default zoom key "o"
 from optparse import OptionParser
 import filterbank
 import spectra
-import waterfaller_interact_v2_working as wt
+import waterfaller_interact as wt
 import copy
+
+
+
+# real FRB from Dominic
+filename = '/home/dleduc/hey-aliens/simulateFRBclassification/jiani_FRBs.npy'
+frb = np.load(filename)
 
 # datafile from waterfaller
 # parameters
 start = 16.22
 duration = 0.06
 dm = 600
-nsub = 3712
+nsub = 64
 width = 1
 sweep_posn = 0.2
 cmap = "hot"
 
 rawdatafile = filterbank.FilterbankFile("/mnt_blpd9/datax/incoming/spliced_guppi_57991_49905_DIAG_FRB121102_0011.gpuspec.0001.8.4chan.fil")
-data, bins, nbins, start_time, source_name = wt.waterfall(rawdatafile, start, duration, dm=dm, nsub=nsub,  width_bins=width)
+data, bins, nbins, start_time = wt.waterfall(rawdatafile, start, duration, dm=dm, nsub=nsub,  width_bins=width)
 
-# global values
 static_data = copy.deepcopy(data)
 current_data = copy.deepcopy(data)
 
 values = np.copy(data.data)
 current_values = np.copy(data.data)
 
-downsamp = 1
+downsamp = 0
 numchan = data.numchans
 vmin = 0
 #vmin = np.mean(values)
 inc = np.std(values)/10
 
-static_dm = dm
+def get_time_signal(array):
+    return np.sum(array, axis=0).flatten()
 
-keys2 = ['','']
-cntr = 0
-
+def average(x, y):
+    return (x+y)/2
 
 def avg_cols():
-    """Returns array with downsampled columns by 2. """
+    """Returns array with averaged columns.
+    Take data and downsample by 2
+    """
     global current_values, downsamp, current_data
 
     downsamp += 2
     current_data.downsample(downsamp)
     current_values = np.copy(current_data.data)
     
+"""
+    for row in current_values:
+        new_row = []
+
+        if (len(row) % 2 != 0):
+            for i in range(0, len(row)-1, 2):
+                new_row.append(average(row[i],row[i+1]))
+            new_values.append(new_row)
+        else:
+            for i in range(0, len(row), 2):
+                new_row.append(average(row[i],row[i+1]))
+            new_values.append(new_row)
+    current_values = new_values
+"""
+
 def avg_rows():
-    """Returns array with subbanded rows by half."""
+    """Returns array with averaged rows."""
     global current_values, current_data, numchan
 
     numchan = numchan/2
     current_data.subband(numchan) 
     current_values = np.copy(current_data.data)
 
+"""
+    current_values = np.transpose(current_values)
+    avg_cols()
+    current_values = np.transpose(current_values)
+"""
+
 def replot():
     """Re-plots and updates the current canvas with the new values."""
-    global fig
+    global fig, ax, current_values
 
-    plt.clf()
-    wt.plot_waterfall(current_data, start, fig, "unknown", duration, dm, "unknown_cand", cmap_str=cmap,width=1,snr=10) #Old plot
+    
+    time_signal = get_time_signal(current_values)
+
+    ax[0].cla()
+    ax[0].plot(time_signal, color='k', scalex=True)
+    ax[0].set_xlim(0, len(time_signal))
+
+    ax[1].cla()
+    ax[1].imshow(current_values, vmin=vmin, origin='lower', aspect='auto')
+    ax[1].set(ylabel = 'Frequency', xlabel='Time')
     fig.canvas.draw()
 
 def on_key(event):
@@ -80,20 +116,9 @@ def on_key(event):
         "q" - Quit and exit plotting tool.
     
     """
-    global keys2, cntr
-
+    
     state = -1
     print('you pressed', event.key)
-    
-    if( event.key == 'shift'):
-        cntr = 1;
-    elif (cntr == 1):
-        keys2[0] = event.key
-        cntr = 2
-    elif cntr == 2:
-        keys2[1] = event.key
-    else:
-        cntr = 0
 
     if event.key == 'o':
         state = 0
@@ -107,14 +132,10 @@ def on_key(event):
         state = 4
     elif event.key == '+':
         state = 5
-    elif cntr == 2 and keys2[0]+keys2[1] == 'D_':
-        cntr == 0
-        state = 6
-    elif cntr == 2 and keys2[0]+keys2[1] == 'D+':
-        cntr == 0
-        state = 7
     elif event.key == 'q':
         state = -1
+        #fig.canvas.mpl_disconnect(fig.canvas.mpl_connect('key_press_event', on_key))
+        #fig.canvas.mpl_disconnect(fig.canvas.mpl_connect('button_press_event', onclick))
         sys.exit()
     if state != -1:
         check_state(state) 
@@ -122,7 +143,7 @@ def on_key(event):
 def check_state(state):
     """Checks the current state and updates the graph accordingly."""
 
-    global current_values, current_data, vmin, downsamp, numchan, dm
+    global current_values, static_data, current_data, vmin, downsamp, numchan
 
     if state == 0:
         print('Returning to original plot')
@@ -130,7 +151,6 @@ def check_state(state):
         current_values = np.copy(current_data.data)
         downsamp = 0
         numchan = static_data.numchans
-        dm = static_dm
         replot()
     elif state == 1:
         print('Reducing resolution')
@@ -159,30 +179,34 @@ def check_state(state):
             return
         vmin = vmin + inc
         replot()
-    elif state == 6:
-        print('Decreasing dispersion')
-        dm -= 5
-        replot()
-    elif state == 7:
-        print('Increasing dispersion')
-        dm += 5
-        replot()
 
 def onclick(event):
-    global current_values
+    global current_values, fig, ax
 
     if event.dblclick:
-        print("y-bin is ", event.ydata)
+        print("y-bin is ", event.ydata, event.y)
         current_values[int(round(event.ydata))] = np.zeros(np.shape(current_values)[1])
-        replot()
+        ax[1].set_data(current_values)
+
+        fig.canvas.draw()
+        #replot()
 
 def main():
     global fig, ax
 
-    fig = plt.figure(figsize=(6,8)) 
+    wt.plot_waterfall(data, start, duration, dm, "unknown_cand", cmap_str=cmap, sweep_posns=sweep_posn)
 
-    wt.plot_waterfall(data, start, fig, "unknown", duration, dm, "unknown_cand", cmap_str=cmap,width=1,snr=10) #Old plot
-    	
+    fig, ax  = plt.subplots(2, figsize=(8,6), gridspec_kw={'height_ratios':[1,3]})
+
+    time_signal = get_time_signal(current_values)
+    ax[0].plot(time_signal, color='k', scalex=True)
+    ax[0].set_xlim(0, len(time_signal))
+    #ax[0].axes.get_yaxis().set_ticks([])
+    #ax[0].axes.get_xaxis().set_ticks([])
+
+    ax[1].imshow(current_values, vmin=vmin, origin='lower', aspect='auto', animated=True)
+    ax[1].set(ylabel = 'Frequency', xlabel='Time')
+
     fig.canvas.mpl_connect('key_press_event', on_key)
     fig.canvas.mpl_connect('button_press_event', onclick)
 
