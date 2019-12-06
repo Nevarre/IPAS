@@ -23,14 +23,8 @@ width = 1
 sweep_posn = 0.2
 cmap = "hot"
 
-static_dm = dm
-
-keys2 = ['','']
-cntr = 0
-
 rawdatafile = filterbank.FilterbankFile("/mnt_blpd9/datax/incoming/spliced_guppi_57991_49905_DIAG_FRB121102_0011.gpuspec.0001.8.4chan.fil")
 data, bins, nbins, start_time, source_name = wt.waterfall(rawdatafile, start, duration, dm=dm, nsub=nsub,  width_bins=width)
-
 
 # global values
 static_data = copy.deepcopy(data)
@@ -44,6 +38,11 @@ numchan = data.numchans
 vmin = 0
 #vmin = np.mean(values)
 inc = np.std(values)/10
+
+static_dm = dm
+
+keys2 = ['','']
+cntr = 0
 
 
 def avg_cols():
